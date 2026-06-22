@@ -14,14 +14,16 @@
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <style>
-    /* ← キーボード対策（最重要） */
+    /* ★ Chromeでも隠れないための最重要設定 */
     html, body {
       height: auto;
       min-height: 100%;
       overflow-y: auto;
     }
 
+    /* ★ Chromeのキーボード対策：下に余白を作る */
     body {
+      padding-bottom: 200px; /* ← ここが超重要 */
       font-family: Arial, sans-serif;
       padding: 20px;
       background: #f0f0f0;
