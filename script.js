@@ -65,6 +65,12 @@ document.getElementById('jan').addEventListener('input', (e) => {
   }
 });
 
+// リセットボタン
+document.getElementById('resetBtn').addEventListener('click', () => {
+  document.getElementById('jan').value = "";
+  document.getElementById('result').innerHTML = "";
+});
+
 // バーコード読み取り
 document.getElementById('scanBtn').addEventListener('click', () => {
   Quagga.init({
