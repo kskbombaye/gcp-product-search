@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商品検索</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 18px;
+    }
+    #result p {
+      margin: 5px 0;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>JANコード検索</h2>
+
+  <!-- JAN入力欄 -->
+  <input id="jan" type="text" placeholder="JANコードを入力（13桁）">
+
+  <!-- 結果表示エリア -->
+  <div id="result"></div>
+
+  <!-- script.js 読み込み -->
+  <script src="script.js"></script>
+</body>
+</html>
