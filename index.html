@@ -3,23 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>商品検索</title>
+  <title>商品検索アプリ</title>
+
   <style>
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
+      background: #f5f5f5;
     }
+
+    h2 {
+      text-align: center;
+    }
+
     input {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       margin-bottom: 10px;
       border: 1px solid #ccc;
-      border-radius: 4px;
+      border-radius: 6px;
       font-size: 18px;
     }
-    #result p {
-      margin: 5px 0;
-      font-size: 16px;
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    #scanBtn {
+      background: #007bff;
+      color: white;
+    }
+
+    #resetBtn {
+      background: #dc3545;
+      color: white;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .history-item {
+      background: #fff;
+      padding: 10px;
+      margin-top: 8px;
+      border-radius: 6px;
+      font-size: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
   </style>
 </head>
@@ -27,13 +67,17 @@
 
   <h2>JANコード検索</h2>
 
-  <!-- JAN入力欄 -->
   <input id="jan" type="text" placeholder="JANコードを入力（13桁）">
 
-  <!-- 結果表示エリア -->
+  <button id="scanBtn">📷 バーコードを読み取る</button>
+  <button id="resetBtn">リセット</button>
+
   <div id="result"></div>
 
-  <!-- script.js 読み込み -->
+  <h3>検索履歴</h3>
+  <div id="history"></div>
+
+  <script src="https://unpkg.com/@ericblade/quagga2/dist/quagga.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
