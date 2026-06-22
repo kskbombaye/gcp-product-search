@@ -23,7 +23,7 @@ fetch('master.csv')
     }
   });
 
-// JAN検索処理
+// JAN検索
 function searchJAN(jan) {
   const item = products.find(p => p.jan === jan);
 
@@ -56,8 +56,6 @@ function searchJAN(jan) {
   html += `</div>`;
 
   document.getElementById('result').innerHTML = html;
-
-  saveHistory(jan, item.name);
 }
 
 // 入力イベント
@@ -67,38 +65,6 @@ document.getElementById('jan').addEventListener('input', (e) => {
   }
 });
 
-// リセットボタン
-document.getElementById('resetBtn').addEventListener('click', () => {
-  document.getElementById('jan').value = "";
-  document.getElementById('result').innerHTML = "";
-});
-
-// 履歴保存
-function saveHistory(jan, name) {
-  let history = JSON.parse(localStorage.getItem("history") || "[]");
-
-  history.unshift({ jan, name, time: new Date().toLocaleString() });
-
-  if (history.length > 20) history.pop();
-
-  localStorage.setItem("history", JSON.stringify(history));
-  renderHistory();
-}
-
-// 履歴表示
-function renderHistory() {
-  let history = JSON.parse(localStorage.getItem("history") || "[]");
-  let html = "";
-
-  history.forEach(h => {
-    html += `<div class="history-item">${h.time}：${h.jan}（${h.name}）</div>`;
-  });
-
-  document.getElementById('history').innerHTML = html;
-}
-
-renderHistory();
-
 // バーコード読み取り
 document.getElementById('scanBtn').addEventListener('click', () => {
   Quagga.init({
@@ -106,6 +72,9 @@ document.getElementById('scanBtn').addEventListener('click', () => {
       name: "Live",
       type: "LiveStream",
       target: document.querySelector('body'),
+      constraints: {
+        facingMode: "environment"
+      }
     },
     decoder: {
       readers: ["ean_reader"]
