@@ -34,14 +34,20 @@
       font-size: 18px;
     }
 
-    button {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 8px;
-      font-size: 18px;
-      cursor: pointer;
+    /* 横並びボタン */
+    .button-row {
+      display: flex;
+      gap: 10px;
       margin-bottom: 10px;
+    }
+
+    .button-row button {
+      flex: 1;
+      padding: 14px;
+      font-size: 18px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
     }
 
     #scanBtn {
@@ -54,6 +60,7 @@
       color: white;
     }
 
+    /* カードUI */
     .card {
       background: white;
       padding: 18px;
@@ -74,15 +81,20 @@
 
   <input id="jan" type="text" placeholder="JANコードを入力（13桁）">
 
-  <button id="scanBtn">📷 バーコードを読み取る</button>
-  <button id="resetBtn">リセット</button>
+  <div class="button-row">
+    <button id="scanBtn">📷 読み取る</button>
+    <button id="resetBtn">リセット</button>
+  </div>
 
   <div id="result"></div>
 
+  <!-- Quagga2（バーコード読み取り） -->
   <script src="https://unpkg.com/@ericblade/quagga2/dist/quagga.min.js"></script>
+
+  <!-- メイン処理 -->
   <script src="script.js"></script>
 
-  <!-- Service Worker -->
+  <!-- Service Worker 登録 -->
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("service-worker.js");
