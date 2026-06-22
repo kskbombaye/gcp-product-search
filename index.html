@@ -5,28 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>商品検索アプリ</title>
 
-  <!-- PWA manifest -->
   <link rel="manifest" href="manifest.json">
-
-  <!-- iOS用 -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <style>
-    /* ★ Chromeでも隠れないための最重要設定 */
     html, body {
-      height: auto;
-      min-height: 100%;
+      margin: 0;
+      padding: 0;
       overflow-y: auto;
+      background: #f0f0f0;
+      font-family: Arial, sans-serif;
     }
 
-    /* ★ Chromeのキーボード対策：下に余白を作る */
     body {
-      padding-bottom: 200px; /* ← ここが超重要 */
-      font-family: Arial, sans-serif;
       padding: 20px;
-      background: #f0f0f0;
+      box-sizing: border-box;
     }
 
     h2 {
@@ -43,7 +38,6 @@
       font-size: 18px;
     }
 
-    /* 横並びボタン */
     .button-row {
       display: flex;
       gap: 10px;
@@ -69,7 +63,6 @@
       color: white;
     }
 
-    /* カードUI */
     .card {
       background: white;
       padding: 18px;
@@ -97,13 +90,20 @@
 
   <div id="result"></div>
 
-  <!-- Quagga2（バーコード読み取り） -->
   <script src="https://unpkg.com/@ericblade/quagga2/dist/quagga.min.js"></script>
-
-  <!-- メイン処理 -->
   <script src="script.js"></script>
 
-  <!-- Service Worker 登録 -->
+  <!-- ★ Chromeキーボード対策：実際の表示領域の高さを使う -->
+  <script>
+    function adjustHeight() {
+      document.body.style.minHeight = window.visualViewport.height + "px";
+    }
+
+    window.visualViewport.addEventListener("resize", adjustHeight);
+    window.visualViewport.addEventListener("scroll", adjustHeight);
+    adjustHeight();
+  </script>
+
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("service-worker.js");
