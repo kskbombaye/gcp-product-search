@@ -11,14 +11,12 @@
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <style>
-    /* ★ Chromeキーボード対策：100dvh を使う */
     html, body {
       margin: 0;
       padding: 0;
-      height: 100dvh; /* ← これが最重要 */
-      overflow-y: auto;
       background: #f0f0f0;
       font-family: Arial, sans-serif;
+      overflow-x: hidden;
     }
 
     body {
@@ -92,31 +90,9 @@
       line-height: 1.5;
     }
 
-    @media (prefers-color-scheme: dark) {
-      body {
-        background: #1e1e1e;
-        color: #ffffff;
-      }
-
-      input {
-        background: #2c2c2c;
-        color: #fff;
-        border: 1px solid #444;
-      }
-
-      .card {
-        background: #2c2c2c;
-        border: 1px solid #444;
-        box-shadow: none;
-      }
-
-      #scanBtn {
-        background: #2196f3;
-      }
-
-      #resetBtn {
-        background: #e53935;
-      }
+    /* ★ Chrome対策：画面下に大きな余白を作る */
+    .bottom-space {
+      height: 300px;
     }
   </style>
 </head>
@@ -133,24 +109,11 @@
 
   <div id="result"></div>
 
+  <!-- 画面下に余白（Chromeの強制スクロール対策） -->
+  <div class="bottom-space"></div>
+
   <script src="https://unpkg.com/@ericblade/quagga2/dist/quagga.min.js"></script>
   <script src="script.js"></script>
-
-  <!-- ★ visualViewport が動かない場合の fallback -->
-  <script>
-    function fixHeight() {
-      const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-      document.body.style.minHeight = h + "px";
-    }
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", fixHeight);
-      window.visualViewport.addEventListener("scroll", fixHeight);
-    }
-
-    window.addEventListener("resize", fixHeight);
-    fixHeight();
-  </script>
 
   <script>
     if ("serviceWorker" in navigator) {
