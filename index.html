@@ -116,7 +116,7 @@
       width: 80%;
       height: 2px;
       background: rgba(0,255,0,0.9);
-      z-index: 999999; /* ← iPhoneでも必ず最前面 */
+      z-index: 999999;
       pointer-events: none;
     }
 
@@ -254,29 +254,8 @@
         Quagga.start();
       });
 
-      /* onDetected の重複登録を防ぐ */
       Quagga.offDetected(onDetectedHandler);
       Quagga.onDetected(onDetectedHandler);
     }
 
-    function onDetectedHandler(data) {
-      const code = data.codeResult.code;
-      const conf = data.codeResult.confidence;
-
-      if (conf < 30) return;
-
-      jan.value = code;
-      searchJAN(code);
-
-      stopScanner();
-    }
-
-    function stopScanner() {
-      Quagga.stop();
-      scanner-overlay.style.display = "none";
-    }
-
-    scanner-close.addEventListener("click", stopScanner);
-  </script>
-</body>
-</html>
+    function onDetectedHandler
