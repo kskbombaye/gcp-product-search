@@ -71,7 +71,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   document.getElementById('result').innerHTML = "";
 });
 
-// バーコード読み取り
+// ★ 読み取り精度MAX版 Quagga2
 document.getElementById('scanBtn').addEventListener('click', () => {
   Quagga.init({
     inputStream: {
@@ -79,12 +79,36 @@ document.getElementById('scanBtn').addEventListener('click', () => {
       type: "LiveStream",
       target: document.querySelector('body'),
       constraints: {
-        facingMode: "environment"
+        facingMode: "environment",
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        aspectRatio: { ideal: 1.777 },   // iPhoneで安定
+        frameRate: { ideal: 15 }         // FPSを下げて精度UP
       }
     },
+
+    locator: {
+      patchSize: "medium",
+      halfSample: true,
+      // ★ スキャン領域を中央に限定（精度UP）
+      roi: {
+        x: 0.1,   // 左10%
+        y: 0.3,   // 上30%
+        width: 0.8,
+        height: 0.4
+      }
+    },
+
     decoder: {
-      readers: ["ean_reader"]
-    }
+      readers: ["ean_reader"],
+      multiple: false
+    },
+
+    // ★ iPhone Safari 安定化
+    numOfWorkers: 0,
+
+    // ★ 誤検出フィルタ
+    locate: true
   }, function(err) {
     if (err) {
       alert("カメラが使用できません");
@@ -93,8 +117,23 @@ document.getElementById('scanBtn').addEventListener('click', () => {
     Quagga.start();
   });
 
+  let lastCode = "";
+  let lastTime = 0;
+
+  // ★ 読み取り成功時（誤検出防止ロジック付き）
   Quagga.onDetected(data => {
     const code = data.codeResult.code;
+    const now = Date.now();
+
+    // ★ 信頼度フィルタ（confidence が低い場合は無視）
+    if (data.codeResult.confidence < 30) return;
+
+    // ★ 連続検出の抑制（同じコードを連続で拾わない）
+    if (code === lastCode && now - lastTime < 800) return;
+
+    lastCode = code;
+    lastTime = now;
+
     document.getElementById('jan').value = code;
     searchJAN(code);
     Quagga.stop();
