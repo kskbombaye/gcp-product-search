@@ -226,8 +226,8 @@
     scanBtn.addEventListener("click", () => {
       scanner-overlay.style.display = "flex";
 
-      /* iPhone対策：描画が完了するまで待つ */
-      setTimeout(() => startScanner(), 200);
+      /* iPhone/Android 共通：描画が完了するまで待つ */
+      setTimeout(() => startScanner(), 300);
     });
 
     function startScanner() {
