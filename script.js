@@ -71,7 +71,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   document.getElementById('result').innerHTML = "";
 });
 
-// ★ 読み取り精度MAX版 Quagga2
+// ★ バランス型（ピントが合いやすい）Quagga2 設定
 document.getElementById('scanBtn').addEventListener('click', () => {
   Quagga.init({
     inputStream: {
@@ -80,22 +80,20 @@ document.getElementById('scanBtn').addEventListener('click', () => {
       target: document.querySelector('body'),
       constraints: {
         facingMode: "environment",
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-        aspectRatio: { ideal: 1.777 },   // iPhoneで安定
-        frameRate: { ideal: 15 }         // FPSを下げて精度UP
+        width: { ideal: 960 },     // ← iPhoneでピントが合いやすい
+        height: { ideal: 540 },
+        frameRate: { ideal: 24 }   // ← フォーカス速度UP
       }
     },
 
     locator: {
       patchSize: "medium",
       halfSample: true,
-      // ★ スキャン領域を中央に限定（精度UP）
       roi: {
-        x: 0.1,   // 左10%
-        y: 0.3,   // 上30%
-        width: 0.8,
-        height: 0.4
+        x: 0.05,   // ← ROIを広げてフォーカスが迷わないように
+        y: 0.25,
+        width: 0.9,
+        height: 0.5
       }
     },
 
@@ -104,11 +102,7 @@ document.getElementById('scanBtn').addEventListener('click', () => {
       multiple: false
     },
 
-    // ★ iPhone Safari 安定化
-    numOfWorkers: 0,
-
-    // ★ 誤検出フィルタ
-    locate: true
+    numOfWorkers: 0
   }, function(err) {
     if (err) {
       alert("カメラが使用できません");
@@ -120,15 +114,15 @@ document.getElementById('scanBtn').addEventListener('click', () => {
   let lastCode = "";
   let lastTime = 0;
 
-  // ★ 読み取り成功時（誤検出防止ロジック付き）
+  // 読み取り成功時
   Quagga.onDetected(data => {
     const code = data.codeResult.code;
     const now = Date.now();
 
-    // ★ 信頼度フィルタ（confidence が低い場合は無視）
+    // 信頼度フィルタ（低い場合は無視）
     if (data.codeResult.confidence < 30) return;
 
-    // ★ 連続検出の抑制（同じコードを連続で拾わない）
+    // 連続検出の抑制
     if (code === lastCode && now - lastTime < 800) return;
 
     lastCode = code;
