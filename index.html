@@ -5,24 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>商品検索アプリ</title>
   <style>
-    /* CSSはそのまま使用 */
-    html, body { margin: 0; padding: 24px; background: #f0f0f0; font-family: Arial, sans-serif; box-sizing: border-box; }
-    input { width: 100%; padding: 16px; margin-bottom: 16px; border: 1px solid #ccc; border-radius: 12px; font-size: 18px; box-sizing: border-box; }
-    .button-row { display: flex; gap: 12px; margin-bottom: 12px; }
-    button { flex: 1; padding: 16px; font-size: 18px; border-radius: 12px; border: none; cursor: pointer; color: white; }
+    body { margin: 0; padding: 20px; background: #f4f4f9; font-family: sans-serif; }
+    h2 { text-align: center; color: #333; }
+    input { width: 100%; padding: 15px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
+    .button-row { display: flex; gap: 10px; margin-bottom: 20px; }
+    button { flex: 1; padding: 15px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; color: white; }
     #scanBtn { background: #007bff; }
-    #resetBtn { background: #dc3545; }
-    .card { background: #fff; padding: 22px; border-radius: 18px; margin-top: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    #resetBtn { background: #6c757d; }
+    .card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .card p { margin: 8px 0; border-bottom: 1px solid #eee; padding-bottom: 4px; }
     #scanner-overlay { position: fixed; inset: 0; background: #000; display: none; flex-direction: column; z-index: 9999; }
-    #scanner-view { position: relative; width: 100%; height: 80%; }
+    #scanner-view { flex: 1; position: relative; }
     #scanner-view video { width: 100%; height: 100%; object-fit: cover; }
-    #scanner-close { padding: 20px; background: #444; color: #fff; border: none; }
+    #scanner-close { padding: 20px; background: #d9534f; color: white; border: none; font-size: 16px; }
   </style>
 </head>
 <body>
 
-  <h2>JANコード検索</h2>
-  <input id="jan" type="text" placeholder="JANコードを入力（13桁）" inputmode="numeric">
+  <h2>商品検索</h2>
+  <input id="jan" type="text" placeholder="JANコードを入力" inputmode="numeric">
   <div class="button-row">
     <button id="scanBtn">📷 読み取る</button>
     <button id="resetBtn">リセット</button>
@@ -43,28 +44,40 @@
       .then(r => r.text())
       .then(csv => {
         const rows = csv.trim().split('\n');
-        rows.slice(1).forEach(row => {
+        products = rows.slice(1).map(row => {
           const c = row.split(',');
-          products.push({ jan: c[0].trim(), name: c[1], size: c[2], discount: c[3], discount_period: c[4], plus_point: c[5], plus_point_period: c[6], point_rate: c[7], point_rate_period: c[8] });
+          return { jan: c[0]?.trim(), name: c[1], size: c[2], discount: c[3], discount_period: c[4], plus_point: c[5], plus_point_period: c[6], point_rate: c[7], point_rate_period: c[8] };
         });
       });
 
-    // 検索ロジック
     function searchJAN(jan) {
       const item = products.find(p => p.jan === jan);
-      document.getElementById('result').innerHTML = item ? 
-        `<div class="card"><p><strong>商品名：</strong>${item.name}</p><p><strong>規格：</strong>${item.size}</p></div>` : 
-        "<p>該当商品がありません</p>";
+      if (!item) {
+        document.getElementById('result').innerHTML = "<p>該当商品がありません</p>";
+        return;
+      }
+      document.getElementById('result').innerHTML = `
+        <div class="card">
+          <p><strong>商品名：</strong>${item.name || '-'}</p>
+          <p><strong>規格：</strong>${item.size || '-'}</p>
+          <p><strong>値引：</strong>${item.discount || '-'}円</p>
+          <p><strong>値引期間：</strong>${item.discount_period || '-'}</p>
+          <p><strong>プラスポイント：</strong>${item.plus_point || '-'}pt</p>
+          <p><strong>ポイント期間：</strong>${item.plus_point_period || '-'}</p>
+          <p><strong>ポイント倍率：</strong>${item.point_rate || '-'}倍</p>
+          <p><strong>倍期間：</strong>${item.point_rate_period || '-'}</p>
+        </div>
+      `;
     }
 
-    // スキャナー起動
+    // カメラ起動
     document.getElementById('scanBtn').addEventListener('click', () => {
       document.getElementById('scanner-overlay').style.display = 'flex';
       Quagga.init({
         inputStream: { type: "LiveStream", target: document.querySelector('#scanner-view'), constraints: { facingMode: "environment" } },
         decoder: { readers: ["ean_reader"] }
       }, (err) => {
-        if (err) return alert("カメラが使えません");
+        if (err) return alert("カメラが使えません。権限を確認してください。");
         Quagga.start();
       });
     });
@@ -80,6 +93,15 @@
     document.getElementById('scanner-close').addEventListener('click', () => {
       Quagga.stop();
       document.getElementById('scanner-overlay').style.display = 'none';
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      document.getElementById('jan').value = "";
+      document.getElementById('result').innerHTML = "";
+    });
+
+    document.getElementById('jan').addEventListener('input', (e) => {
+      if (e.target.value.length >= 13) searchJAN(e.target.value.trim());
     });
   </script>
 </body>
