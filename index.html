@@ -5,11 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>商品検索アプリ</title>
 
-  <link rel="manifest" href="manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <link rel="apple-touch-icon" href="icon-192.png">
-
   <style>
     html, body {
       margin: 0;
@@ -60,20 +55,8 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
 
-    .button-row button:active {
-      transform: scale(0.96);
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-
-    #scanBtn {
-      background: #007bff;
-      color: white;
-    }
-
-    #resetBtn {
-      background: #dc3545;
-      color: white;
-    }
+    #scanBtn { background: #007bff; color: white; }
+    #resetBtn { background: #dc3545; color: white; }
 
     .card {
       background: #ffffff;
@@ -84,13 +67,7 @@
       border: 1px solid #e5e5e5;
     }
 
-    .card p {
-      margin: 10px 0;
-      font-size: 18px;
-      line-height: 1.5;
-    }
-
-    /* スキャナー用フルスクリーンオーバーレイ */
+    /* フルスクリーンのスキャナー画面 */
     #scanner-overlay {
       position: fixed;
       inset: 0;
@@ -109,33 +86,21 @@
       left: 0;
       right: 0;
       padding: 12px 16px;
+      background: rgba(0,0,0,0.6);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(0,0,0,0.6);
-      box-sizing: border-box;
-    }
-
-    #scanner-title {
-      font-size: 18px;
-      font-weight: bold;
     }
 
     #scanner-close {
       padding: 8px 14px;
-      font-size: 14px;
       border-radius: 999px;
-      border: none;
-      background: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.2);
       color: #fff;
+      border: none;
       cursor: pointer;
     }
 
-    #scanner-close:active {
-      background: rgba(255,255,255,0.3);
-    }
-
-    /* カメラ映像が描画される領域（Quaggaがここにvideo/canvasを追加） */
     #scanner-view {
       position: relative;
       width: 100%;
@@ -143,65 +108,26 @@
       overflow: hidden;
     }
 
-    /* ガイド枠 */
-    #scan-guide {
-      position: absolute;
-      top: 35%;
+    /* ★ Aタイプ：中央の細い水平ライン */
+    #scan-line {
+      position: fixed;
+      top: 50%;
       left: 10%;
       width: 80%;
-      height: 30%;
-      border: 3px solid rgba(0, 255, 0, 0.9);
-      border-radius: 12px;
-      box-shadow: 0 0 12px rgba(0,255,0,0.7);
-      pointer-events: none;
-    }
-
-    #scan-guide::before {
-      content: "";
-      position: absolute;
-      top: 50%;
-      left: 5%;
-      right: 5%;
       height: 2px;
       background: rgba(0,255,0,0.9);
+      z-index: 999999; /* ← iPhoneでも必ず最前面 */
+      pointer-events: none;
     }
 
     #scanner-hint {
       position: absolute;
       bottom: 40px;
-      left: 0;
-      right: 0;
+      width: 100%;
       text-align: center;
-      font-size: 16px;
       color: #fff;
+      font-size: 16px;
       text-shadow: 0 0 6px #000;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      body {
-        background: #1e1e1e;
-        color: #ffffff;
-      }
-
-      input {
-        background: #2c2c2c;
-        color: #fff;
-        border: 1px solid #444;
-      }
-
-      .card {
-        background: #2c2c2c;
-        border: 1px solid #444;
-        box-shadow: none;
-      }
-
-      #scanBtn {
-        background: #2196f3;
-      }
-
-      #resetBtn {
-        background: #e53935;
-      }
     }
   </style>
 </head>
@@ -221,38 +147,35 @@
   <!-- フルスクリーン スキャナーUI -->
   <div id="scanner-overlay">
     <div id="scanner-header">
-      <div id="scanner-title">バーコード読み取り</div>
+      <div>バーコード読み取り</div>
       <button id="scanner-close">閉じる</button>
     </div>
-    <div id="scanner-view">
-      <div id="scan-guide"></div>
-      <div id="scanner-hint">バーコードを枠に合わせてください</div>
-    </div>
+    <div id="scanner-view"></div>
+    <div id="scan-line"></div>
+    <div id="scanner-hint">バーコードを線に合わせてください</div>
   </div>
 
-  <!-- Quagga2 -->
   <script src="https://unpkg.com/@ericblade/quagga2/dist/quagga.min.js"></script>
 
   <script>
+    /* CSV読み込み */
     let products = [];
-
-    // CSV読み込み
-    fetch('master.csv')
-      .then(response => response.text())
+    fetch("master.csv")
+      .then(r => r.text())
       .then(csv => {
-        const rows = csv.trim().split('\\n');
+        const rows = csv.trim().split("\n");
         for (let i = 1; i < rows.length; i++) {
-          const cols = rows[i].split(',');
+          const c = rows[i].split(",");
           products.push({
-            jan: cols[0].trim(),
-            name: cols[1],
-            size: cols[2],
-            discount: cols[3],
-            discount_period: cols[4],
-            plus_point: cols[5],
-            plus_point_period: cols[6],
-            point_rate: cols[7],
-            point_rate_period: cols[8]
+            jan: c[0].trim(),
+            name: c[1],
+            size: c[2],
+            discount: c[3],
+            discount_period: c[4],
+            plus_point: c[5],
+            plus_point_period: c[6],
+            point_rate: c[7],
+            point_rate_period: c[8]
           });
         }
       });
@@ -260,132 +183,97 @@
     function searchJAN(jan) {
       const item = products.find(p => p.jan === jan);
       if (!item) {
-        document.getElementById('result').innerHTML = "<p>該当商品がありません</p>";
+        result.innerHTML = "<p>該当商品がありません</p>";
         return;
       }
 
-      let html = `
-        <div class="card">
-          <p><strong>商品名：</strong>${item.name}</p>
-          <p><strong>規格：</strong>${item.size}</p>
-      `;
+      let html = `<div class="card">
+        <p><strong>商品名：</strong>${item.name}</p>
+        <p><strong>規格：</strong>${item.size}</p>`;
 
       if (item.discount && item.discount !== "-") {
-        html += `<p><strong>値引：</strong>${item.discount}円</p>`;
-        html += `<p><strong>期間：</strong>${item.discount_period}</p>`;
+        html += `<p><strong>値引：</strong>${item.discount}円</p>
+                 <p><strong>期間：</strong>${item.discount_period}</p>`;
       }
 
       if (item.plus_point && item.plus_point !== "-") {
-        html += `<p><strong>プラスポイント：</strong>${item.plus_point}pt</p>`;
-        html += `<p><strong>PP期間：</strong>${item.plus_point_period}</p>`;
+        html += `<p><strong>プラスポイント：</strong>${item.plus_point}pt</p>
+                 <p><strong>PP期間：</strong>${item.plus_point_period}</p>`;
       }
 
       if (item.point_rate && item.point_rate !== "-") {
-        html += `<p><strong>ポイント倍率：</strong>${item.point_rate}倍</p>`;
-        html += `<p><strong>倍期間：</strong>${item.point_rate_period}</p>`;
+        html += `<p><strong>ポイント倍率：</strong>${item.point_rate}倍</p>
+                 <p><strong>倍期間：</strong>${item.point_rate_period}</p>`;
       }
 
       html += `</div>`;
-      document.getElementById('result').innerHTML = html;
+      result.innerHTML = html;
     }
 
-    document.getElementById('jan').addEventListener('input', (e) => {
-      if (e.target.value.length === 13) {
-        searchJAN(e.target.value.trim());
-      }
+    jan.addEventListener("input", e => {
+      if (e.target.value.length === 13) searchJAN(e.target.value.trim());
     });
 
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      document.getElementById('jan').value = "";
-      document.getElementById('result').innerHTML = "";
+    resetBtn.addEventListener("click", () => {
+      jan.value = "";
+      result.innerHTML = "";
     });
 
-    const scannerOverlay = document.getElementById('scanner-overlay');
-    const scannerView = document.getElementById('scanner-view');
-    const scannerClose = document.getElementById('scanner-close');
+    /* OS判定 */
+    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
 
-    let lastCode = "";
-    let lastTime = 0;
-    let quaggaRunning = false;
-
-    function startScanner() {
-      if (quaggaRunning) return;
-
-      scannerOverlay.style.display = 'flex';
+    /* スキャナー起動 */
+    scanBtn.addEventListener("click", () => {
+      scanner-overlay.style.display = "flex";
 
       Quagga.init({
         inputStream: {
           name: "Live",
           type: "LiveStream",
-          target: scannerView,
-          constraints: {
-            facingMode: "environment",
-            width: { ideal: 640 },
-            height: { ideal: 480 },
-            aspectRatio: { ideal: 1.333 }
-          }
+          target: document.querySelector("#scanner-view"),
+          constraints: isIOS
+            ? { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 }, aspectRatio: { ideal: 1.333 } }
+            : { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 }, aspectRatio: { ideal: 1.777 } }
         },
-        locator: {
-          patchSize: "medium",
-          halfSample: true,
-          roi: {
-            x: 0.05,
-            y: 0.25,
-            width: 0.9,
-            height: 0.5
-          }
-        },
-        decoder: {
-          readers: ["ean_reader"],
-          multiple: false
-        },
+        locator: isIOS
+          ? { patchSize: "medium", halfSample: true, roi: { x:0.05, y:0.25, width:0.9, height:0.5 } }
+          : { patchSize: "large", halfSample: true, roi: { x:0.05, y:0.20, width:0.9, height:0.6 } },
+        decoder: { readers: ["ean_reader"], multiple: false },
         numOfWorkers: 0
-      }, function(err) {
+      }, err => {
         if (err) {
           alert("カメラが使用できません");
-          scannerOverlay.style.display = 'none';
+          scanner-overlay.style.display = "none";
           return;
         }
         Quagga.start();
-        quaggaRunning = true;
       });
 
-      lastCode = "";
-      lastTime = 0;
+      let last = "";
+      let lastTime = 0;
 
-      Quagga.onDetected(onDetectedHandler);
-    }
+      Quagga.onDetected(data => {
+        const code = data.codeResult.code;
+        const now = Date.now();
 
-    function stopScanner() {
-      if (quaggaRunning) {
-        Quagga.offDetected(onDetectedHandler);
+        if (data.codeResult.confidence < 30) return;
+        if (code === last && now - lastTime < 800) return;
+
+        last = code;
+        lastTime = now;
+
+        jan.value = code;
+        searchJAN(code);
+
         Quagga.stop();
-        quaggaRunning = false;
-      }
-      scannerOverlay.style.display = 'none';
-    }
+        scanner-overlay.style.display = "none";
+      });
+    });
 
-    function onDetectedHandler(data) {
-      const code = data.codeResult.code;
-      const now = Date.now();
-
-      if (data.codeResult.confidence < 30) return;
-      if (code === lastCode && now - lastTime < 800) return;
-
-      lastCode = code;
-      lastTime = now;
-
-      document.getElementById('jan').value = code;
-      searchJAN(code);
-      stopScanner();
-    }
-
-    document.getElementById('scanBtn').addEventListener('click', startScanner);
-    scannerClose.addEventListener('click', stopScanner);
-
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js");
-    }
+    scanner-close.addEventListener("click", () => {
+      Quagga.stop();
+      scanner-overlay.style.display = "none";
+    });
   </script>
 </body>
 </html>
