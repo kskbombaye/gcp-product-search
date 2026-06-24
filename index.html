@@ -181,8 +181,9 @@
         const rows = csv.trim().split("\n");
         for (let i = 1; i < rows.length; i++) {
           const c = rows[i].split(",");
+
           products.push({
-            jan: c[0].trim(),
+            jan: c[0].replace(/\s+/g, ""),  // ← ★ 空白完全除去（iPhone対応）
             name: c[1],
             size: c[2],
             discount: c[3],
@@ -296,7 +297,13 @@
     }
 
     function onDetectedHandler(data) {
-      const code = data.codeResult.code;
+      let code = String(data.codeResult.code);
+
+      /* ★ iPhone対策：13桁に満たない場合は先頭0補完 */
+      if (code.length < 13) {
+        code = code.padStart(13, "0");
+      }
+
       const conf = data.codeResult.confidence;
       const now = Date.now();
 
