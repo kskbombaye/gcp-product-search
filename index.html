@@ -226,6 +226,11 @@
     scanBtn.addEventListener("click", () => {
       scanner-overlay.style.display = "flex";
 
+      /* iPhone対策：描画が完了するまで待つ */
+      setTimeout(() => startScanner(), 200);
+    });
+
+    function startScanner() {
       Quagga.init({
         inputStream: {
           name: "Live",
@@ -249,31 +254,29 @@
         Quagga.start();
       });
 
-      let last = "";
-      let lastTime = 0;
+      /* onDetected の重複登録を防ぐ */
+      Quagga.offDetected(onDetectedHandler);
+      Quagga.onDetected(onDetectedHandler);
+    }
 
-      Quagga.onDetected(data => {
-        const code = data.codeResult.code;
-        const now = Date.now();
+    function onDetectedHandler(data) {
+      const code = data.codeResult.code;
+      const conf = data.codeResult.confidence;
 
-        if (data.codeResult.confidence < 30) return;
-        if (code === last && now - lastTime < 800) return;
+      if (conf < 30) return;
 
-        last = code;
-        lastTime = now;
+      jan.value = code;
+      searchJAN(code);
 
-        jan.value = code;
-        searchJAN(code);
+      stopScanner();
+    }
 
-        Quagga.stop();
-        scanner-overlay.style.display = "none";
-      });
-    });
-
-    scanner-close.addEventListener("click", () => {
+    function stopScanner() {
       Quagga.stop();
       scanner-overlay.style.display = "none";
-    });
+    }
+
+    scanner-close.addEventListener("click", stopScanner);
   </script>
 </body>
 </html>
