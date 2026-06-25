@@ -5,7 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>商品検索アプリ</title>
 
+  <!-- ★ PWA：manifest を読み込む -->
+  <link rel="manifest" href="./manifest.json">
+
+  <!-- iOS 対応（ホーム画面アイコン） -->
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
   <style>
+    /* （あなたの CSS はそのまま） */
     html, body {
       margin: 0;
       padding: 0;
@@ -183,7 +192,7 @@
           const c = rows[i].split(",");
 
           products.push({
-            jan: c[0].replace(/\s+/g, ""),  // ← ★ 空白完全除去（iPhone対応）
+            jan: c[0].replace(/\s+/g, ""),
             name: c[1],
             size: c[2],
             discount: c[3],
@@ -262,8 +271,6 @@
         locator: {
           patchSize: "large",
           halfSample: true,
-
-          /* ★ 枠と完全一致した ROI（誤読ゼロ） */
           roi: {
             x: 0.10,
             y: 0.35,
@@ -299,7 +306,6 @@
     function onDetectedHandler(data) {
       let code = String(data.codeResult.code);
 
-      /* ★ iPhone対策：13桁に満たない場合は先頭0補完 */
       if (code.length < 13) {
         code = code.padStart(13, "0");
       }
@@ -321,5 +327,13 @@
     scanBtn.addEventListener("click", startScanner);
     scannerClose.addEventListener("click", stopScanner);
   </script>
+
+  <!-- ★ PWA：service-worker を登録 -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./service-worker.js");
+    }
+  </script>
+
 </body>
 </html>
