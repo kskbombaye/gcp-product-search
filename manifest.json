@@ -1,6 +1,6 @@
 {
-  "name": "GCP対象商品検索",
-  "short_name": "GCP対象商品検索",
+  "name": "GCP商品検索",
+  "short_name": "GCP検索",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
