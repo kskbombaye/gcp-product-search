@@ -1,65 +1,339 @@
-<script>
-let csvData = [];
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GCP対象商品検索</title>
 
-function toHalfWidth(str) {
-  return str.replace(/[！-～]/g, s =>
-    String.fromCharCode(s.charCodeAt(0) - 0xFEE0)
-  );
-}
+  <!-- ★ PWA：manifest を読み込む -->
+  <link rel="manifest" href="./manifest.json">
 
-/* CSV読み込み（新バージョンと同じ書き方） */
-fetch("master.csv")
-  .then(r => r.text())
-  .then(text => {
-    csvData = text.split("\n").map(row => {
-      const cols = row.split(",").map(c => toHalfWidth(c.trim()));
-      return cols;
-    });
-  });
+  <!-- iOS 対応（ホーム画面アイコン） -->
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
-/* JAN検索（新バージョンと同じ書き方） */
-function searchJAN(jan) {
-  const resultArea = document.getElementById("result");
-  resultArea.innerHTML = "";
+  <style>
+    /* （あなたの CSS はそのまま） */
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #f0f0f0;
+      font-family: Arial, sans-serif;
+      overflow-x: hidden;
+    }
 
-  if (!jan) return;
+    body {
+      padding: 24px;
+      box-sizing: border-box;
+      font-size: 18px;
+      line-height: 1.6;
+    }
 
-  const hit = csvData.find(row => row[0] === jan);
+    h2 {
+      text-align: center;
+      margin-bottom: 24px;
+      font-size: 26px;
+      font-weight: bold;
+    }
 
-  if (!hit) {
-    resultArea.innerHTML = `<div class="card">該当商品がありません</div>`;
-    return;
-  }
+    input {
+      width: 100%;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      font-size: 18px;
+      background: #fff;
+    }
 
-  resultArea.innerHTML = `
-    <div class="card">
-      <p><strong>商品名：</strong>${hit[1]}</p>
-      <p><strong>規格：</strong>${hit[2]}</p>
+    .button-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
 
-      ${hit[3] && hit[3] !== "-" ? `<p><strong>値引：</strong>${hit[3]}円</p>` : ""}
-      ${hit[4] && hit[4] !== "-" ? `<p><strong>値引期間：</strong>${hit[4]}</p>` : ""}
+    .button-row button {
+      flex: 1;
+      padding: 16px;
+      font-size: 18px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
 
-      ${hit[5] && hit[5] !== "-" ? `<p><strong>プラスポイント：</strong>${hit[5]}pt</p>` : ""}
-      ${hit[6] && hit[6] !== "-" ? `<p><strong>PP期間：</strong>${hit[6]}</p>` : ""}
+    #scanBtn { background: #007bff; color: white; }
+    #resetBtn { background: #dc3545; color: white; }
 
-      ${hit[7] && hit[7] !== "-" ? `<p><strong>ポイント倍率：</strong>${hit[7]}倍</p>` : ""}
-      ${hit[8] && hit[8] !== "-" ? `<p><strong>倍期間：</strong>${hit[8]}</p>` : ""}
+    .card {
+      background: #ffffff;
+      padding: 22px;
+      border-radius: 18px;
+      margin-top: 24px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+      border: 1px solid #e5e5e5;
+    }
 
-      ${hit[9] && hit[9] !== "-" ? `<p><strong>売価配信：</strong>${hit[9]}</p>` : ""}
-      ${hit[9] && hit[10] !== "-" ? `<p><strong>売価配信：</strong>${hit[10]}</p>` : ""}
+    /* フルスクリーンのスキャナー画面 */
+    #scanner-overlay {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 9999;
+      color: #fff;
+    }
+
+    #scanner-header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 16px;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #scanner-close {
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    #scanner-view {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* ★ 枠（scan-guide） */
+    #scan-guide {
+      position: absolute;
+      top: 35%;
+      left: 10%;
+      width: 80%;
+      height: 30%;
+      border: 3px solid rgba(0,255,0,0.9);
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,255,0,0.7);
+      pointer-events: none;
+      z-index: 99999;
+    }
+
+    /* ★ 中央ライン */
+    #scan-guide::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 5%;
+      right: 5%;
+      height: 2px;
+      background: rgba(0,255,0,0.9);
+    }
+
+    #scanner-hint {
+      position: absolute;
+      bottom: 40px;
+      width: 100%;
+      text-align: center;
+      color: #fff;
+      font-size: 16px;
+      text-shadow: 0 0 6px #000;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>GCP対象商品検索</h2>
+
+  <input id="jan" type="text" placeholder="JANコードを入力（13桁）">
+
+  <div class="button-row">
+    <button id="scanBtn">📷 読み取る</button>
+    <button id="resetBtn">リセット</button>
+  </div>
+
+  <div id="result"></div>
+
+  <!-- フルスクリーン スキャナーUI -->
+  <div id="scanner-overlay">
+    <div id="scanner-header">
+      <div>バーコード読み取り</div>
+      <button id="scanner-close">閉じる</button>
     </div>
-  `;
-}
 
-/* 入力イベント */
-jan.addEventListener("input", e => {
-  const code = toHalfWidth(e.target.value.trim());
-  if (code.length === 13) searchJAN(code);
-});
+    <div id="scanner-view">
+      <div id="scan-guide"></div>
+      <div id="scanner-hint">バーコードを枠に合わせてください</div>
+    </div>
+  </div>
 
-/* リセット */
-resetBtn.addEventListener("click", () => {
-  jan.value = "";
-  result.innerHTML = "";
-});
-</script>
+  <script src="https://unpkg.com/@ericblade/quagga2/dist/quagga.min.js"></script>
+
+  <script>
+    /* CSV読み込み */
+    let products = [];
+    fetch("master.csv")
+      .then(r => r.text())
+      .then(csv => {
+        const rows = csv.trim().split("\n");
+        for (let i = 1; i < rows.length; i++) {
+          const c = rows[i].split(",");
+
+          products.push({
+            jan: c[0].replace(/\s+/g, ""),
+            name: c[1],
+            size: c[2],
+            discount: c[3],
+            discount_period: c[4],
+            plus_point: c[5],
+            plus_point_period: c[6],
+            point_rate: c[7],
+            point_rate_period: c[8]
+          });
+        }
+      });
+
+    function searchJAN(jan) {
+      const item = products.find(p => p.jan === jan);
+      if (!item) {
+        result.innerHTML = "<p>該当商品がありません</p>";
+        return;
+      }
+
+      let html = `<div class="card">
+        <p><strong>商品名：</strong>${item.name}</p>
+        <p><strong>規格：</strong>${item.size}</p>`;
+
+      if (item.discount && item.discount !== "-") {
+        html += `<p><strong>値引：</strong>${item.discount}円</p>
+                 <p><strong>期間：</strong>${item.discount_period}</p>`;
+      }
+
+      if (item.plus_point && item.plus_point !== "-") {
+        html += `<p><strong>プラスポイント：</strong>${item.plus_point}pt</p>
+                 <p><strong>PP期間：</strong>${item.plus_point_period}</p>`;
+      }
+
+      if (item.point_rate && item.point_rate !== "-") {
+        html += `<p><strong>ポイント倍率：</strong>${item.point_rate}倍</p>
+                 <p><strong>倍期間：</strong>${item.point_rate_period}</p>`;
+      }
+
+      html += `</div>`;
+      result.innerHTML = html;
+    }
+
+    jan.addEventListener("input", e => {
+      if (e.target.value.length === 13) searchJAN(e.target.value.trim());
+    });
+
+    resetBtn.addEventListener("click", () => {
+      jan.value = "";
+      result.innerHTML = "";
+    });
+
+    const scannerOverlay = document.getElementById("scanner-overlay");
+    const scannerView = document.getElementById("scanner-view");
+    const scannerClose = document.getElementById("scanner-close");
+
+    let lastCode = "";
+    let lastTime = 0;
+    let quaggaRunning = false;
+
+    function startScanner() {
+      if (quaggaRunning) return;
+
+      scannerOverlay.style.display = "flex";
+
+      Quagga.init({
+        inputStream: {
+          name: "Live",
+          type: "LiveStream",
+          target: scannerView,
+          constraints: {
+            facingMode: "environment",
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        },
+        locator: {
+          patchSize: "large",
+          halfSample: true,
+          roi: {
+            x: 0.10,
+            y: 0.35,
+            width: 0.80,
+            height: 0.30
+          }
+        },
+        decoder: { readers: ["ean_reader"], multiple: false },
+        numOfWorkers: 0
+      }, err => {
+        if (err) {
+          alert("カメラが使用できません");
+          scannerOverlay.style.display = "none";
+          return;
+        }
+        Quagga.start();
+        quaggaRunning = true;
+      });
+
+      Quagga.offDetected(onDetectedHandler);
+      Quagga.onDetected(onDetectedHandler);
+    }
+
+    function stopScanner() {
+      if (quaggaRunning) {
+        Quagga.offDetected(onDetectedHandler);
+        Quagga.stop();
+        quaggaRunning = false;
+      }
+      scannerOverlay.style.display = "none";
+    }
+
+    function onDetectedHandler(data) {
+      let code = String(data.codeResult.code);
+
+      if (code.length < 13) {
+        code = code.padStart(13, "0");
+      }
+
+      const conf = data.codeResult.confidence;
+      const now = Date.now();
+
+      if (conf < 30) return;
+      if (code === lastCode && now - lastTime < 800) return;
+
+      lastCode = code;
+      lastTime = now;
+
+      jan.value = code;
+      searchJAN(code);
+      stopScanner();
+    }
+
+    scanBtn.addEventListener("click", startScanner);
+    scannerClose.addEventListener("click", stopScanner);
+  </script>
+
+  <!-- ★ PWA：service-worker を登録 -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./service-worker.js");
+    }
+  </script>
+
+</body>
+</html>
