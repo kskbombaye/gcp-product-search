@@ -202,7 +202,7 @@
             point_rate: c[7],
             point_rate_period: c[8]
             price_delivery: c[9],
-            price_delivery_rate: c[10]
+            price_delivery_period: c[10]
           });
         }
       });
@@ -234,9 +234,9 @@
       }
 
       if (item.price_delivery && item.price_delivery !== "-") {
-    html += `<p><strong>売価配信：</strong>${item.price_delivery}</p>`;
+    html += `<p><strong>売価配信：</strong>${item.price_delivery}</p>
              <p><strong>売価配信期間：</strong>${item.price_delivery_period}</p>`;
-  }
+      }
 
       html += `</div>`;
       result.innerHTML = html;
